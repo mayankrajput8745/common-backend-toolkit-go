@@ -1,21 +1,27 @@
 package middleware
 
 import (
-	"fmt"
+	"log"
+	"os"
 	"time"
 
 	"github.com/mayankrajput8745/common-backend-toolkit-go/httpserver/contract"
 )
 
+// apiLogger is a custom logger for API request logging
+
+var apiLogger = log.New(os.Stdout, "[API] ", log.LstdFlags)
+
 func Logger() contract.MiddlewareFunc {
 	return func(ctx contract.Context, next func()) {
 		start := time.Now()
 		next()
-		fmt.Printf("[%s] %s | %d | %s\n",
+		latencyMs := time.Since(start).Milliseconds()
+		apiLogger.Printf("%s %s | %d | %dms\n",
 			ctx.Method(),
 			ctx.Path(),
 			ctx.StatusCode(),
-			time.Since(start),
+			latencyMs,
 		)
 	}
 }
