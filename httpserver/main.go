@@ -3,7 +3,7 @@ package httpserver
 import (
 	"fmt"
 
-	"common-backend-toolkit-go/httpserver/frameworks/fasthttp"
+	"github.com/mayankrajput8745/common-backend-toolkit-go/httpserver/frameworks/fasthttp"
 )
 
 func InitHTTPServer(framework string, port int32) (Server, error) {
