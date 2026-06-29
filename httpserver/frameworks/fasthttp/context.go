@@ -18,6 +18,7 @@ func newContext(ctx *fh.RequestCtx) contract.Context {
 
 func (c *fasthttpContext) Method() string {
 	return string(c.ctx.Method())
+}
 
 func (c *fasthttpContext) Path() string {
 	return string(c.ctx.Path())
