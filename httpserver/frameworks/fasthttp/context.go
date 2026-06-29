@@ -3,7 +3,8 @@ package fasthttp
 import (
 	"encoding/json"
 
-	"common-backend-toolkit/httpserver/contract"
+	"common-backend-toolkit-go/httpserver/contract"
+
 	fh "github.com/valyala/fasthttp"
 )
 

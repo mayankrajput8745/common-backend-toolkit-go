@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"common-backend-toolkit/httpserver/contract"
+	"common-backend-toolkit-go/httpserver/contract"
 
 	fhr "github.com/fasthttp/router"
 	fh "github.com/valyala/fasthttp"

@@ -1,6 +1,6 @@
 package httpserver
 
-import "common-backend-toolkit/httpserver/contract"
+import "common-backend-toolkit-go/httpserver/contract"
 
 type (
 	HandlerFunc    = contract.HandlerFunc
