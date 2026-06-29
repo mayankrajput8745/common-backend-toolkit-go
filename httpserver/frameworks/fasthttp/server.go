@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"common-backend-toolkit-go/httpserver/contract"
+	"github.com/mayankrajput8745/common-backend-toolkit-go/httpserver/contract"
 
 	fhr "github.com/fasthttp/router"
 	fh "github.com/valyala/fasthttp"
@@ -56,13 +56,15 @@ func (s *fasthttpServer) Group(prefix string) contract.Router {
 func (s *fasthttpServer) Start() error {
 	addr := fmt.Sprintf(":%d", s.port)
 	fmt.Printf("Server Started and Listening on PORT: %s\n", addr)
+
 	s.server = &fh.Server{
 		Handler:      s.chainedHandler(),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
-	return fh.ListenAndServe(addr, s.chainedHandler())
+
+	return s.server.ListenAndServe(addr)
 }
 
 func (s *fasthttpServer) Close() error {
