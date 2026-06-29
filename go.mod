@@ -1,6 +1,6 @@
-module common-backend-toolkit-go
+module github.com/mayankrajput8745/common-backend-toolkit-go
 
-go 1.26.3
+go 1.23
 
 require (
 	github.com/fasthttp/router v1.5.4
