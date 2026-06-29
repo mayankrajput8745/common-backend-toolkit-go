@@ -1,14 +1,18 @@
 package fasthttp
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"common-backend-toolkit/httpserver/contract"
+
 	fhr "github.com/fasthttp/router"
 	fh "github.com/valyala/fasthttp"
 )
 
 type fasthttpServer struct {
+	server      *fh.Server
 	router      *fhr.Router
 	port        int32
 	middlewares []contract.MiddlewareFunc
@@ -52,7 +56,24 @@ func (s *fasthttpServer) Group(prefix string) contract.Router {
 func (s *fasthttpServer) Start() error {
 	addr := fmt.Sprintf(":%d", s.port)
 	fmt.Printf("Server Started and Listening on PORT: %s\n", addr)
+	s.server = &fh.Server{
+		Handler:      s.chainedHandler(),
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
 	return fh.ListenAndServe(addr, s.chainedHandler())
+}
+
+func (s *fasthttpServer) Close() error {
+	if s.server == nil {
+		return nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	return s.server.ShutdownWithContext(ctx)
 }
 
 func (s *fasthttpServer) chainedHandler() fh.RequestHandler {

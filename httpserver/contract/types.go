@@ -31,4 +31,5 @@ type Server interface {
 	Router
 	Use(middlewares ...MiddlewareFunc)
 	Start() error
+	Close() error
 }
