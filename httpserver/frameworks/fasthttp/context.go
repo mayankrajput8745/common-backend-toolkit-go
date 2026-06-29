@@ -3,7 +3,7 @@ package fasthttp
 import (
 	"encoding/json"
 
-	"common-backend-toolkit-go/httpserver/contract"
+	"github.com/mayankrajput8745/common-backend-toolkit-go/httpserver/contract"
 
 	fh "github.com/valyala/fasthttp"
 )
@@ -18,7 +18,6 @@ func newContext(ctx *fh.RequestCtx) contract.Context {
 
 func (c *fasthttpContext) Method() string {
 	return string(c.ctx.Method())
-}
 
 func (c *fasthttpContext) Path() string {
 	return string(c.ctx.Path())
