@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"common-backend-toolkit-go/httpserver/contract"
+	"github.com/mayankrajput8745/common-backend-toolkit-go/httpserver/contract"
 )
 
 func Logger() contract.MiddlewareFunc {
