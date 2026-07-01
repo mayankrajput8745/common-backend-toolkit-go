@@ -11,6 +11,17 @@ import (
 	fh "github.com/valyala/fasthttp"
 )
 
+const (
+	defaultReadTimeout  = 5 * time.Second
+	defaultWriteTimeout = 10 * time.Second
+	defaultIdleTimeout  = 60 * time.Second
+)
+
+// Config is the fasthttp server's native tuning surface. Set any of its
+// fields (Concurrency, MaxConnsPerIP, TLSConfig, ...); Handler is set
+// internally and any value passed for it is overwritten on Start.
+type Config = fh.Server
+
 type fasthttpServer struct {
 	server      *fh.Server
 	router      *fhr.Router
@@ -22,10 +33,23 @@ type fasthttpGroup struct {
 	group *fhr.Group
 }
 
-func New(port int32) contract.Server {
+func New(port int32, cfg contract.ServerConfig) contract.Server {
+	serverCfg, _ := cfg.(Config)
+
+	if serverCfg.ReadTimeout <= 0 {
+		serverCfg.ReadTimeout = defaultReadTimeout
+	}
+	if serverCfg.WriteTimeout <= 0 {
+		serverCfg.WriteTimeout = defaultWriteTimeout
+	}
+	if serverCfg.IdleTimeout <= 0 {
+		serverCfg.IdleTimeout = defaultIdleTimeout
+	}
+
 	return &fasthttpServer{
 		router: fhr.New(),
 		port:   port,
+		server: &serverCfg,
 	}
 }
 
@@ -57,12 +81,7 @@ func (s *fasthttpServer) Start() error {
 	addr := fmt.Sprintf(":%d", s.port)
 	fmt.Printf("Server Started and Listening on PORT: %s\n", addr)
 
-	s.server = &fh.Server{
-		Handler:      s.chainedHandler(),
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  60 * time.Second,
-	}
+	s.server.Handler = s.chainedHandler()
 
 	return s.server.ListenAndServe(addr)
 }

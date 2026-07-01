@@ -1,5 +1,10 @@
 package contract
 
+// ServerConfig carries framework-specific server tuning options. Each
+// framework implementation defines and type-asserts its own concrete
+// config type (e.g. fasthttp.Config), so this stays a plain pass-through.
+type ServerConfig any
+
 type HandlerFunc func(ctx Context)
 
 type MiddlewareFunc func(ctx Context, next func())

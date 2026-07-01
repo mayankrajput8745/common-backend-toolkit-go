@@ -8,4 +8,5 @@ type (
 	Context        = contract.Context
 	Router         = contract.Router
 	Server         = contract.Server
+	ServerConfig   = contract.ServerConfig
 )

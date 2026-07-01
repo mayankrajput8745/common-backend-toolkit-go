@@ -45,7 +45,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	srv.Use(middleware.Logger())
+	srv.Use(middleware.APILogger())
 
 	srv.GET("/health", func(ctx httpserver.Context) {
 		ctx.WriteJSON(200, map[string]string{"status": "ok"})
@@ -136,11 +136,11 @@ type Context interface {
 
 Currently available:
 
-- `middleware.Logger()` — Logs method, path, status code, and latency
+- `middleware.APILogger()` — Logs method, path, status code, and latency
 
 Example:
 ```go
-srv.Use(middleware.Logger())
+srv.Use(middleware.APILogger())
 ```
 
 ## Project Structure
