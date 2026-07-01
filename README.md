@@ -17,9 +17,10 @@ This toolkit helps you build HTTP servers using clean interfaces so your core ap
 - Clean `Context`, `HandlerFunc`, `MiddlewareFunc`, `Router`, and `Server` interfaces
 - Middleware chaining with `next()` pattern
 - Route grouping (`Group()`)
-- Fasthttp adapter (high-performance)
+- Fasthttp adapter (high-performance) with pass-through native config (timeouts, concurrency, TLS, etc.)
 - Graceful shutdown via `Server.Close()`
 - Simple server initialization with `InitHTTPServer()`
+- Standardized JSON response helpers (success, error, paginated, custom)
 
 ## Installation
 
@@ -35,25 +36,25 @@ package main
 import (
 	"log"
 
-	"common-backend-toolkit/httpserver"
-	"common-backend-toolkit/httpserver/middleware"
+	"github.com/mayankrajput8745/common-backend-toolkit-go/httpserver"
+	"github.com/mayankrajput8745/common-backend-toolkit-go/httpserver/middleware"
 )
 
 func main() {
-	srv, err := httpserver.InitHTTPServer("fasthttp", 8080)
+	srv, err := httpserver.InitHTTPServer("fasthttp", 8080, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	srv.Use(middleware.APILogger())
+	srv.Use(middleware.Logger())
 
 	srv.GET("/health", func(ctx httpserver.Context) {
-		ctx.WriteJSON(200, map[string]string{"status": "ok"})
+		httpserver.SuccessResponse(ctx, map[string]string{"status": "ok"})
 	})
 
 	srv.GET("/users/:id", func(ctx httpserver.Context) {
 		id := ctx.Param("id")
-		ctx.WriteJSON(200, map[string]string{"user_id": id})
+		httpserver.SuccessResponse(ctx, map[string]string{"user_id": id})
 	})
 
 	log.Println("Starting server...")
@@ -87,6 +88,27 @@ func handleCriticalError(srv httpserver.Server, err error) {
 	}
 }
 ```
+
+## Server Initialization
+
+```go
+func InitHTTPServer(framework string, port int32, cfg ServerConfig) (Server, error)
+```
+
+`cfg` is an `any` pass-through (`ServerConfig`) that each framework adapter type-asserts to its own native config type. Pass `nil` to use framework defaults.
+
+```go
+import fasthttp "github.com/mayankrajput8745/common-backend-toolkit-go/httpserver/frameworks/fasthttp"
+
+cfg := &fasthttp.Config{
+	Concurrency:   256 * 1024,
+	MaxConnsPerIP: 100,
+}
+
+srv, err := httpserver.InitHTTPServer("fasthttp", 8080, cfg)
+```
+
+For the fasthttp adapter, `fasthttp.Config` is an alias for `fasthttp.Server` (from `valyala/fasthttp`) — set any of its fields (`ReadTimeout`, `WriteTimeout`, `Concurrency`, `TLSConfig`, ...). Must be passed by pointer. `Handler` is set internally and overwritten on `Start()`. If `ReadTimeout`, `WriteTimeout`, or `IdleTimeout` are left unset, they default to 5s, 10s, and 60s respectively.
 
 ## Available Interfaces
 
@@ -136,11 +158,42 @@ type Context interface {
 
 Currently available:
 
-- `middleware.APILogger()` — Logs method, path, status code, and latency
+- `middleware.Logger()` — Logs method, path, status code, and latency (ms)
 
 Example:
 ```go
-srv.Use(middleware.APILogger())
+srv.Use(middleware.Logger())
+```
+
+## Response Helpers
+
+`httpserver` ships a set of helpers over `Context.WriteJSON` for common response shapes, all returning the standard `Response{Success, Msg, Data}` envelope (or `PaginatedDataResponse` for pagination):
+
+| Helper | Status Code |
+|---|---|
+| `SuccessResponse(ctx, data)` | 200 |
+| `SuccessMsgResponse(ctx, msg)` | 202 |
+| `CreatedResponse(ctx, data)` | 201 |
+| `PaginatedResponse(ctx, data, pagination)` | 200 |
+| `BadRequestResponse(ctx, msg)` | 400 |
+| `UnauthorizedResponse(ctx, msg)` | 401 |
+| `ForbiddenResponse(ctx, msg)` | 403 |
+| `NotFoundResponse(ctx, msg)` | 404 |
+| `TooManyRequestsResponse(ctx, msg)` | 429 |
+| `InternalServerErrorResponse(ctx, msg)` | 500 |
+| `CustomResponse(ctx, statusCode, success, msg, data)` | custom |
+| `TextResponse(ctx, text)` | 200, `text/plain` |
+
+Example:
+```go
+httpserver.SuccessResponse(ctx, user)
+httpserver.NotFoundResponse(ctx, "user not found")
+httpserver.PaginatedResponse(ctx, users, httpserver.Pagination{
+	TotalCount: 120,
+	Limit:      20,
+	Page:       1,
+	NextCursor: "abc123",
+})
 ```
 
 ## Project Structure
@@ -148,14 +201,16 @@ srv.Use(middleware.APILogger())
 ```
 common-backend-toolkit-go/
 ├── go.mod
+├── go.sum
 ├── httpserver/
 │   ├── main.go              # Factory (InitHTTPServer)
 │   ├── types.go             # Type aliases
+│   ├── response.go          # Response envelope + helpers
 │   ├── contract/
 │   │   └── types.go         # Core interfaces
 │   ├── frameworks/
 │   │   └── fasthttp/
-│   │       ├── server.go    # Fasthttp implementation
+│   │       ├── server.go    # Fasthttp implementation + Config
 │   │       ├── context.go   # Context adapter
 │   │       └── main.go
 │   └── middleware/
@@ -174,7 +229,7 @@ You can add support for other frameworks (Gin, Echo, stdlib `net/http`, etc.) by
 - [ ] Add more middlewares (Recovery, CORS, RequestID, Timeout)
 - [ ] Add Gin adapter
 - [ ] Add standard `net/http` adapter
-- [ ] Improved configuration options for server (timeouts, max connections, etc.)
+- [x] Configurable server tuning (timeouts, max connections, etc.) via `ServerConfig`
 - [ ] Add tests
 
 ## License
